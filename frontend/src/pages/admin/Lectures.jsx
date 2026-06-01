@@ -1,8 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../services/api';
+import api, { BACKEND_URL } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import Loader from '../../components/Loader';
 import { Plus, Edit3, Trash2, X, Video, BookOpen, Layers, Link, ChevronLeft, FolderOpen, Play } from 'lucide-react';
+
+// Helper to extract YouTube video ID
+const getYoutubeId = (url) => {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+};
+
+// Helper to get YouTube thumbnail fallback
+const getYoutubeThumbnail = (url) => {
+  const id = getYoutubeId(url);
+  return id ? `https://img.youtube.com/vi/${id}/maxresdefault.jpg` : null;
+};
+
+// Helper to get correct absolute thumbnail URL
+const getLectureThumbnail = (lec) => {
+  if (lec.thumbnail) {
+    if (lec.thumbnail.startsWith('http')) {
+      return lec.thumbnail;
+    }
+    return `${BACKEND_URL}${lec.thumbnail}`;
+  }
+  const ytThumb = getYoutubeThumbnail(lec.youtubeVideoUrl);
+  return ytThumb || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=500';
+};
 
 const Lectures = () => {
   const [lectures, setLectures] = useState([]);
@@ -281,7 +307,7 @@ const Lectures = () => {
                     {/* Thumbnail frame */}
                     <div className="h-44 relative bg-slate-100 dark:bg-zinc-850 overflow-hidden">
                       <img
-                        src={lecture.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&auto=format&fit=crop&q=60'}
+                        src={getLectureThumbnail(lecture)}
                         alt={lecture.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={(e) => {
