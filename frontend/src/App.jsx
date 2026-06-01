@@ -14,12 +14,14 @@ import AdminDashboard from './pages/admin/Dashboard';
 import AdminStudents from './pages/admin/Students';
 import AdminCourses from './pages/admin/Courses';
 import AdminLectures from './pages/admin/Lectures';
+import AdminLiveClasses from './pages/admin/LiveClasses';
 import AdminResources from './pages/admin/Resources';
 import AdminAnnouncements from './pages/admin/Announcements';
 
 // Student Pages
 import StudentDashboard from './pages/student/Dashboard';
 import StudentLectures from './pages/student/Lectures';
+import StudentLiveClasses from './pages/student/LiveClasses';
 import StudentResources from './pages/student/Resources';
 import StudentAnnouncements from './pages/student/Announcements';
 
@@ -74,12 +76,14 @@ const App = () => {
               <Route path="/admin/students" element={<AdminStudents />} />
               <Route path="/admin/courses" element={<AdminCourses />} />
               <Route path="/admin/lectures" element={<AdminLectures />} />
+              <Route path="/admin/live-classes" element={<AdminLiveClasses />} />
               <Route path="/admin/resources" element={<AdminResources />} />
               <Route path="/admin/announcements" element={<AdminAnnouncements />} />
 
               {/* Student Panel */}
               <Route path="/student/dashboard" element={<StudentDashboard />} />
               <Route path="/student/lectures" element={<StudentLectures />} />
+              <Route path="/student/live-classes" element={<StudentLiveClasses />} />
               <Route path="/student/resources" element={<StudentResources />} />
               <Route path="/student/announcements" element={<StudentAnnouncements />} />
 

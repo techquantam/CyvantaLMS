@@ -30,7 +30,7 @@ exports.getLiveClasses = async (req, res) => {
 // @route   POST /api/live-classes
 // @access  Private/Admin
 exports.createLiveClass = async (req, res) => {
-  const { title, description, youtubeLiveUrl, courseId, scheduleDate } = req.body;
+  const { title, description, youtubeLiveUrl, courseId, scheduleDate, thumbnailUrl } = req.body;
 
   try {
     if (!title || !youtubeLiveUrl || !courseId || !scheduleDate) {
@@ -43,6 +43,7 @@ exports.createLiveClass = async (req, res) => {
       youtubeLiveUrl,
       courseId,
       scheduleDate,
+      thumbnailUrl,
       isActive: true,
     });
 
@@ -57,7 +58,7 @@ exports.createLiveClass = async (req, res) => {
 // @route   PUT /api/live-classes/:id
 // @access  Private/Admin
 exports.updateLiveClass = async (req, res) => {
-  const { title, description, youtubeLiveUrl, courseId, scheduleDate } = req.body;
+  const { title, description, youtubeLiveUrl, courseId, scheduleDate, thumbnailUrl } = req.body;
 
   try {
     let liveClass = await LiveClass.findById(req.params.id);
@@ -71,6 +72,7 @@ exports.updateLiveClass = async (req, res) => {
     if (youtubeLiveUrl) liveClass.youtubeLiveUrl = youtubeLiveUrl;
     if (courseId) liveClass.courseId = courseId;
     if (scheduleDate) liveClass.scheduleDate = scheduleDate;
+    if (thumbnailUrl !== undefined) liveClass.thumbnailUrl = thumbnailUrl;
 
     await liveClass.save();
 
@@ -125,5 +127,41 @@ exports.deleteLiveClass = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Server error deleting live class' });
+  }
+};
+
+// @desc    Conclude live class and save as recorded lecture replay
+// @route   POST /api/live-classes/:id/conclude
+// @access  Private/Admin
+exports.concludeLiveClass = async (req, res) => {
+  try {
+    const liveClass = await LiveClass.findById(req.params.id);
+
+    if (!liveClass) {
+      return res.status(404).json({ success: false, message: 'Live class not found' });
+    }
+
+    const Lecture = require('../models/Lecture');
+
+    // Create the recorded lecture replay
+    const lecture = await Lecture.create({
+      title: `${liveClass.title} (Live Replay)`,
+      description: liveClass.description || `Replay of the live interactive session streamed on ${new Date(liveClass.scheduleDate).toLocaleDateString()}.`,
+      youtubeVideoUrl: liveClass.youtubeLiveUrl,
+      courseId: liveClass.courseId,
+      thumbnail: liveClass.thumbnailUrl || '',
+    });
+
+    // Delete the live class record now that it is successfully converted
+    await LiveClass.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Live class concluded and successfully saved as a Recorded Lecture replay!',
+      lecture,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error concluding live class' });
   }
 };

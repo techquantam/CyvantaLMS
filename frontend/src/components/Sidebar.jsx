@@ -25,6 +25,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     { to: '/admin/students', label: 'Students', icon: Users },
     { to: '/admin/courses', label: 'Courses', icon: GraduationCap },
     { to: '/admin/lectures', label: 'Recorded Lectures', icon: Video },
+    { to: '/admin/live-classes', label: 'Live Classes', icon: Radio },
     { to: '/admin/resources', label: 'Study Resources', icon: FileDown },
     { to: '/admin/announcements', label: 'Announcements', icon: Megaphone },
   ];
@@ -32,6 +33,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const studentLinks = [
     { to: '/student/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/student/lectures', label: 'Recorded Lectures', icon: Video },
+    { to: '/student/live-classes', label: 'Live Classes', icon: Radio },
     { to: '/student/resources', label: 'Study Materials', icon: FileDown },
     { to: '/student/announcements', label: 'Announcements', icon: Megaphone },
   ];

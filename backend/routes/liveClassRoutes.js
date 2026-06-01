@@ -6,6 +6,7 @@ const {
   updateLiveClass,
   toggleLiveClassStatus,
   deleteLiveClass,
+  concludeLiveClass,
 } = require('../controllers/liveClassController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -20,5 +21,6 @@ router.route('/:id')
   .delete(authorize('admin'), deleteLiveClass);
 
 router.patch('/:id/status', authorize('admin'), toggleLiveClassStatus);
+router.post('/:id/conclude', authorize('admin'), concludeLiveClass);
 
 module.exports = router;

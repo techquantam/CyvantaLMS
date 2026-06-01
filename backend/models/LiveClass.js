@@ -27,6 +27,9 @@ const LiveClassSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  thumbnailUrl: {
+    type: String,
+  },
 });
 
 module.exports = mongoose.model('LiveClass', LiveClassSchema);
