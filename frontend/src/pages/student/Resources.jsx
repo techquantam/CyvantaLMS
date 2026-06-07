@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api, { BACKEND_URL } from '../../services/api';
+import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import Loader from '../../components/Loader';
 import { FileText, FileDown, Search, BookOpen } from 'lucide-react';
@@ -15,7 +16,11 @@ const Resources = () => {
   const handleDownload = async (resource) => {
     setDownloadingId(resource._id);
     try {
-      const res = await api.get(`/resources/${resource._id}/download`, {
+      const fileUrl = resource.fileUrl.startsWith('http')
+        ? resource.fileUrl
+        : `${BACKEND_URL}${resource.fileUrl}`;
+
+      const res = await axios.get(fileUrl, {
         responseType: 'blob',
       });
       
@@ -26,6 +31,7 @@ const Resources = () => {
       const extension = resource.fileUrl.split('.').pop() || 'pdf';
       const cleanTitle = resource.title.replace(/[^a-zA-Z0-9]/g, '_');
       link.setAttribute('download', `${cleanTitle}.${extension}`);
+
       
       document.body.appendChild(link);
       link.click();
