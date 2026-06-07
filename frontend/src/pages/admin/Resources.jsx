@@ -9,6 +9,7 @@ const Resources = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedCourseId, setSelectedCourseId] = useState('all');
 
   // Form Fields
   const [title, setTitle] = useState('');
@@ -91,6 +92,14 @@ const Resources = () => {
     }
   };
 
+  const getResourceCount = (cId) => {
+    return resources.filter(r => r.courseId?._id === cId).length;
+  };
+
+  const filteredResources = selectedCourseId === 'all'
+    ? resources
+    : resources.filter(r => r.courseId?._id === selectedCourseId);
+
   if (loading && resources.length === 0) return <Loader />;
 
   return (
@@ -110,75 +119,181 @@ const Resources = () => {
         <button
           onClick={() => {
             setTitle('');
-            setCourseId('');
+            setCourseId(selectedCourseId !== 'all' ? selectedCourseId : '');
             setFile(null);
             setShowAddModal(true);
           }}
-          className="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold shadow-md shadow-brand-500/20 transition-all self-start sm:self-center"
+          className="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold shadow-md shadow-brand-500/20 transition-all self-start sm:self-center shrink-0"
         >
           <Plus className="w-4 h-4 mr-1.5" />
           Upload Material
         </button>
       </div>
 
-      {/* Resource Cards grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {resources.length === 0 ? (
-          <div className="col-span-full text-center py-20 bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800/80 rounded-3xl">
-            <FileText className="w-12 h-12 mx-auto text-slate-350 dark:text-zinc-650 mb-3 animate-pulse" />
-            <p className="text-sm font-medium text-slate-400 dark:text-zinc-500">
-              No study guides catalogued. Click "Upload Material" above to share one.
-            </p>
-          </div>
-        ) : (
-          resources.map((resource) => (
-            <div
-              key={resource._id}
-              className="flex flex-col rounded-3xl bg-white dark:bg-zinc-900 border border-slate-150/60 dark:border-zinc-800/80 overflow-hidden shadow-sm hover:shadow-md transition-all p-6 space-y-4 justify-between"
-            >
+      {/* Split Content View */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        
+        {/* Playlists / Courses Sidebar */}
+        <div className="lg:col-span-1 space-y-4">
+          <div className="p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-slate-150/60 dark:border-zinc-800/80 shadow-sm space-y-4">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+              Course Playlists
+            </h2>
+            
+            {/* Desktop vertical list, Mobile horizontal scroll */}
+            <div className="flex lg:flex-col overflow-x-auto lg:overflow-x-visible gap-2 pb-2 lg:pb-0 scrollbar-none snap-x">
               
-              <div className="space-y-3.5">
-                <div className="flex items-center space-x-2">
-                  <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500 shrink-0">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <h3 className="text-base font-bold font-outfit text-slate-800 dark:text-zinc-150 leading-tight">
-                    {resource.title}
-                  </h3>
+              {/* All Playlists tab */}
+              <button
+                onClick={() => setSelectedCourseId('all')}
+                className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all shrink-0 snap-align-start lg:w-full text-left border ${
+                  selectedCourseId === 'all'
+                    ? 'bg-brand-500/10 dark:bg-brand-500/20 border-brand-500 text-brand-600 dark:text-brand-400'
+                    : 'bg-transparent border-transparent text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-200'
+                }`}
+              >
+                <div className="flex items-center space-x-2.5">
+                  <BookOpen className="w-4 h-4 shrink-0" />
+                  <span>All Resources</span>
                 </div>
+                <span className={`ml-3 px-2 py-0.5 rounded-full text-xs font-bold ${
+                  selectedCourseId === 'all'
+                    ? 'bg-brand-500/20 text-brand-600 dark:text-brand-400'
+                    : 'bg-slate-100 dark:bg-zinc-850 text-slate-500 dark:text-zinc-400'
+                }`}>
+                  {resources.length}
+                </span>
+              </button>
 
-                <div className="space-y-2 text-xs font-semibold text-slate-500 dark:text-zinc-400">
-                  <div className="flex items-center">
-                    <BookOpen className="w-4 h-4 mr-2.5 text-slate-400 shrink-0" />
-                    Course: <span className="ml-1 text-slate-800 dark:text-zinc-200">{resource.courseId?.title || 'General'}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions row */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-zinc-800/80">
-                <a
-                  href={resource.fileUrl.startsWith('http') ? resource.fileUrl : `${BACKEND_URL}${resource.fileUrl}`}
-                  download
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center text-xs font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 hover:underline"
-                >
-                  <FileDown className="w-4 h-4 mr-1.5" />
-                  Download File
-                </a>
-                
-                <button
-                  onClick={() => handleDeleteClick(resource)}
-                  className="p-2 rounded-xl text-rose-500 hover:bg-rose-500/10 border border-rose-500/10 hover:border-rose-500/25 transition-all"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+              {/* Course list items */}
+              {courses.map((course) => {
+                const count = getResourceCount(course._id);
+                const isActive = selectedCourseId === course._id;
+                return (
+                  <button
+                    key={course._id}
+                    onClick={() => setSelectedCourseId(course._id)}
+                    className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all shrink-0 snap-align-start lg:w-full text-left border ${
+                      isActive
+                        ? 'bg-brand-500/10 dark:bg-brand-500/20 border-brand-500 text-brand-600 dark:text-brand-400'
+                        : 'bg-transparent border-transparent text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800/40 hover:text-slate-800 dark:hover:text-zinc-200'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2.5 min-w-0">
+                      <BookOpen className="w-4 h-4 shrink-0" />
+                      <span className="truncate max-w-[120px] lg:max-w-none">{course.title}</span>
+                    </div>
+                    <span className={`ml-3 px-2 py-0.5 rounded-full text-xs font-bold shrink-0 ${
+                      isActive
+                        ? 'bg-brand-500/20 text-brand-600 dark:text-brand-400'
+                        : 'bg-slate-100 dark:bg-zinc-850 text-slate-500 dark:text-zinc-400'
+                    }`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
 
             </div>
-          ))
-        )}
+          </div>
+        </div>
+
+        {/* Resources Cards Grid */}
+        <div className="lg:col-span-3 space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold font-outfit text-slate-800 dark:text-zinc-150">
+              {selectedCourseId === 'all' 
+                ? 'All Uploaded Materials' 
+                : `${courses.find(c => c._id === selectedCourseId)?.title || 'Selected'} Playlist`
+              }
+            </h3>
+            {selectedCourseId !== 'all' && (
+              <button 
+                onClick={() => setSelectedCourseId('all')}
+                className="text-xs font-semibold text-brand-600 hover:underline dark:text-brand-400"
+              >
+                Clear filter
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {filteredResources.length === 0 ? (
+              <div className="col-span-full text-center py-20 bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800/80 rounded-3xl p-6">
+                <FileText className="w-12 h-12 mx-auto text-slate-350 dark:text-zinc-650 mb-3 animate-pulse" />
+                <p className="text-sm font-semibold text-slate-500 dark:text-zinc-400">
+                  {selectedCourseId === 'all'
+                    ? 'No study guides catalogued. Click "Upload Material" above to share one.'
+                    : `No study guides catalogued in the ${courses.find(c => c._id === selectedCourseId)?.title || ''} playlist.`
+                  }
+                </p>
+                {selectedCourseId !== 'all' && (
+                  <button
+                    onClick={() => {
+                      setTitle('');
+                      setCourseId(selectedCourseId);
+                      setFile(null);
+                      setShowAddModal(true);
+                    }}
+                    className="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold shadow-sm transition-all"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" />
+                    Add First Resource
+                  </button>
+                )}
+              </div>
+            ) : (
+              filteredResources.map((resource) => (
+                <div
+                  key={resource._id}
+                  className="flex flex-col rounded-3xl bg-white dark:bg-zinc-900 border border-slate-150/60 dark:border-zinc-800/80 overflow-hidden shadow-sm hover:shadow-md transition-all p-6 space-y-4 justify-between animate-scale-up"
+                >
+                  
+                  <div className="space-y-3.5">
+                    <div className="flex items-center space-x-2">
+                      <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500 shrink-0">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-base font-bold font-outfit text-slate-800 dark:text-zinc-150 leading-tight">
+                        {resource.title}
+                      </h3>
+                    </div>
+
+                    <div className="space-y-2 text-xs font-semibold text-slate-500 dark:text-zinc-400">
+                      <div className="flex items-center">
+                        <BookOpen className="w-4 h-4 mr-2.5 text-slate-400 shrink-0" />
+                        Course: <span className="ml-1 text-slate-800 dark:text-zinc-200">{resource.courseId?.title || 'General'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions row */}
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-zinc-800/80">
+                    <a
+                      href={resource.fileUrl.startsWith('http') ? resource.fileUrl : `${BACKEND_URL}${resource.fileUrl}`}
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-xs font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 hover:underline"
+                    >
+                      <FileDown className="w-4 h-4 mr-1.5" />
+                      Download File
+                    </a>
+                    
+                    <button
+                      onClick={() => handleDeleteClick(resource)}
+                      className="p-2 rounded-xl text-rose-500 hover:bg-rose-500/10 border border-rose-500/10 hover:border-rose-500/25 transition-all"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
       </div>
 
       {/* ADD UPLOAD MODAL */}
@@ -226,7 +341,7 @@ const Resources = () => {
                   type="file"
                   required
                   onChange={handleFileChange}
-                  className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-55 dark:bg-zinc-850 text-slate-850 dark:text-zinc-155 text-sm focus:outline-none file:mr-4 file:py-1 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-500 file:text-white file:cursor-pointer"
+                  className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-55 dark:bg-zinc-850 text-slate-855 dark:text-zinc-155 text-sm focus:outline-none file:mr-4 file:py-1 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-500 file:text-white file:cursor-pointer"
                 />
               </div>
 
@@ -235,7 +350,7 @@ const Resources = () => {
                   type="button"
                   disabled={uploading}
                   onClick={() => setShowAddModal(false)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 text-slate-500 hover:bg-slate-50 text-sm font-semibold"
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 text-slate-500 hover:bg-slate-55 text-sm font-semibold"
                 >
                   Cancel
                 </button>
