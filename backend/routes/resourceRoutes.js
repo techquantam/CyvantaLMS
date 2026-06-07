@@ -4,6 +4,7 @@ const {
   getResources,
   createResource,
   deleteResource,
+  downloadResource,
 } = require('../controllers/resourceController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
@@ -17,4 +18,8 @@ router.route('/')
 router.route('/:id')
   .delete(authorize('admin'), deleteResource);
 
+router.route('/:id/download')
+  .get(downloadResource);
+
 module.exports = router;
+

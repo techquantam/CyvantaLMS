@@ -97,3 +97,51 @@ exports.deleteResource = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error deleting study resource' });
   }
 };
+
+// @desc    Download study material
+// @route   GET /api/resources/:id/download
+// @access  Private
+exports.downloadResource = async (req, res) => {
+  try {
+    const resource = await Resource.findById(req.params.id);
+
+    if (!resource) {
+      return res.status(404).json({ success: false, message: 'Resource not found' });
+    }
+
+    // Students only download resources for their assigned course
+    if (req.user.role === 'student') {
+      if (!req.user.assignedCourse || req.user.assignedCourse.toString() !== resource.courseId.toString()) {
+        return res.status(403).json({ success: false, message: 'Not authorized to download this resource' });
+      }
+    }
+
+    const filename = resource.fileUrl.split('/uploads/')[1];
+    if (!filename) {
+      return res.status(404).json({ success: false, message: 'File path invalid' });
+    }
+
+    const filePath = path.join(__dirname, '../uploads', filename);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ success: false, message: 'File not found on server' });
+    }
+
+    // Determine download filename (sanitize title and preserve extension)
+    const ext = path.extname(filename);
+    const cleanTitle = resource.title.replace(/[^a-zA-Z0-9]/g, '_');
+    const downloadName = `${cleanTitle}${ext}`;
+
+    res.download(filePath, downloadName, (err) => {
+      if (err) {
+        console.error('Error downloading file:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ success: false, message: 'Error downloading file' });
+        }
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error downloading study resource' });
+  }
+};
+

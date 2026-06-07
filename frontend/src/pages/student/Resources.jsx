@@ -8,8 +8,37 @@ const Resources = () => {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [downloadingId, setDownloadingId] = useState(null);
 
   const { showToast } = useAuth();
+
+  const handleDownload = async (resource) => {
+    setDownloadingId(resource._id);
+    try {
+      const res = await api.get(`/resources/${resource._id}/download`, {
+        responseType: 'blob',
+      });
+      
+      const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      
+      const extension = resource.fileUrl.split('.').pop() || 'pdf';
+      const cleanTitle = resource.title.replace(/[^a-zA-Z0-9]/g, '_');
+      link.setAttribute('download', `${cleanTitle}.${extension}`);
+      
+      document.body.appendChild(link);
+      link.click();
+      
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error(err);
+      showToast('Error downloading study material', 'error');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const loadResources = async () => {
     try {
@@ -101,16 +130,23 @@ const Resources = () => {
 
               {/* Actions row */}
               <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-zinc-800/80">
-                <a
-                  href={resource.fileUrl.startsWith('http') ? resource.fileUrl : `${BACKEND_URL}${resource.fileUrl}`}
-                  download
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center w-full py-2.5 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-zinc-850 dark:hover:bg-zinc-800 text-brand-600 dark:text-brand-400 hover:text-brand-700 text-xs font-bold transition-all"
+                <button
+                  onClick={() => handleDownload(resource)}
+                  disabled={downloadingId === resource._id}
+                  className="inline-flex items-center justify-center w-full py-2.5 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-zinc-850 dark:hover:bg-zinc-800 text-brand-600 dark:text-brand-400 hover:text-brand-700 text-xs font-bold transition-all disabled:opacity-75"
                 >
-                  <FileDown className="w-4 h-4 mr-1.5" />
-                  Download study file
-                </a>
+                  {downloadingId === resource._id ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-brand-600 dark:border-brand-400 border-t-transparent rounded-full animate-spin mr-1.5" />
+                      Downloading...
+                    </>
+                  ) : (
+                    <>
+                      <FileDown className="w-4 h-4 mr-1.5" />
+                      Download study file
+                    </>
+                  )}
+                </button>
               </div>
 
             </div>
